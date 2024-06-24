@@ -1,7 +1,8 @@
+// Mark the file for client-side rendering
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";  // Use next/navigation for client components
 
 export default function AddCafe() {
   const [name, setName] = useState("");
@@ -16,35 +17,31 @@ export default function AddCafe() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!name || !street || !city || !country) {
       alert("Name, street, city, and country are required.");
       return;
     }
-
+  
     try {
-      const res = await fetch("http://localhost:3000/api/cafes", {
+      const res = await fetch("/api/cafes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          ratings: {
-            coffee: coffeeRating,
-            atomosphre: atmosphereRating
-          },
-          address: {
-            street,
-            city,
-            postalCode,
-            country
-          }
+          name: name,
+          coffeeRating: coffeeRating,
+          atmosphereRating: atmosphereRating,
+          street: street,
+          city: city,
+          postalCode: postalCode,
+          country: country
         }),
       });
-
+  
       if (res.ok) {
-        router.push("/success");
+        router.push("/");  // Redirect to the homepage after successful POST
       } else {
         throw new Error("Failed to add the café");
       }
@@ -52,7 +49,7 @@ export default function AddCafe() {
       console.error("Error adding café: ", error);
     }
   };
-
+  
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md max-w-lg m-auto">
       <div className="flex flex-col">
