@@ -1,99 +1,382 @@
-export const EditCafeForm = () => {
-   return (
-      <form className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md max-w-lg m-auto">
-  <div className="flex flex-col">
-    <input
-      className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 rounded-md shadow-sm px-4 py-2"
-      type="text"
-      placeholder="Enter café name..."
-      required
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="coffee-rating" className="mb-1 text-gray-700">Coffee Rating (1-10)</label>
-    <input
-      className="appearance-none bg-gray-200 h-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      type="range"
-      id="coffee-rating"
-      name="coffee-rating"
-      min="1"
-      max="10"
-      defaultValue="5"
-    />
-    <label htmlFor="atmosphere-rating" className="mb-1 text-gray-700">Cafe Atmosphere Rating (1-10)</label>
-    <input
-      className="appearance-none bg-gray-200 h-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      type="range"
-      id="atmosphere-rating"
-      name="atmosphere-rating"
-      min="1"
-      max="10"
-      defaultValue="5"
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="street-address" className="mb-1 text-gray-700">Street Address</label>
-    <input
-      type="text"
-      id="street-address"
-      name="street-address"
-      autoComplete="street-address"
-      required
-      className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 rounded-md shadow-sm px-4 py-2"
-      placeholder="1234 Main St"
-      enterKeyHint="next"
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="postal-code" className="mb-1 text-gray-700">ZIP or Postal Code (optional)</label>
-    <input
-      className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 rounded-md shadow-sm px-4 py-2"
-      id="postal-code"
-      name="postal-code"
-      autoComplete="postal-code"
-      enterKeyHint="next"
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="city" className="mb-1 text-gray-700">City</label>
-    <input
-      required
-      type="text"
-      id="city"
-      name="city"
-      autoComplete="address-level2"
-      className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 rounded-md shadow-sm px-4 py-2"
-      placeholder="City"
-      enterKeyHint="next"
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="country" className="mb-1 text-gray-700">Country or Region</label>
-    <select
-      id="country"
-      name="country"
-      autoComplete="country"
-      required
-      className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 rounded-md shadow-sm px-4 py-2"
-      enterKeyHint="done"
-    >
-      {/* Options for countries */}
-      <option value="USA">United States</option>
-      {/* Add more options as needed */}
-    </select>
-  </div>
-  
-  <button
-    type="submit"
-    className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-  >
-     Edit
-  </button>
-</form>
-   )
+// components/EditCafeForm.jsx
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function EditCafeForm({ initialData }) {
+  const router = useRouter();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    coffeeRating: 5,
+    atmosphereRating: 5,
+    street: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "USA"
+  });
+
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Update state variables once initialData is available
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        coffeeRating: initialData.ratings?.coffee || 5,
+        atmosphereRating: initialData.ratings?.atmosphere || 5,
+        street: initialData.address?.street || "",
+        city: initialData.address?.city || "",
+        state: initialData.address?.state || "",
+        postalCode: initialData.address?.postalCode || "",
+        country: initialData.address?.country || "USA"
+      });
+      setIsLoading(false);
+    }
+  }, [initialData]);
+
+  const normalize = (s) =>
+    typeof s === "string" ? s.trim().toLowerCase() : "";
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Required field validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Café name is required";
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Café name must be at least 2 characters";
+    }
+
+    if (!formData.street.trim()) {
+      newErrors.street = "Street address is required";
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = "City is required";
+    }
+
+    if (!formData.state.trim()) {
+      newErrors.state = "State is required";
+    } else if (formData.state.trim().length < 2) {
+      newErrors.state = "Please enter a valid state (e.g., NJ, CA)";
+    }
+
+    // Rating validation
+    if (formData.coffeeRating < 1 || formData.coffeeRating > 10) {
+      newErrors.coffeeRating = "Coffee rating must be between 1 and 10";
+    }
+
+    if (formData.atmosphereRating < 1 || formData.atmosphereRating > 10) {
+      newErrors.atmosphereRating = "Atmosphere rating must be between 1 and 10";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      const res = await fetch(`/api/cafes/${initialData._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          coffeeRating: formData.coffeeRating,
+          atmosphereRating: formData.atmosphereRating,
+          street: formData.street.trim(),
+          city: formData.city.trim(),
+          state: formData.state.trim(),
+          postalCode: formData.postalCode.trim(),
+          country: formData.country,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update the café");
+      }
+
+      setSubmitSuccess(true);
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    } catch (error) {
+      console.error("Error updating café:", error);
+      setErrors({ general: error.message || "There was an issue updating the café. Please try again." });
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-md mx-auto p-8 bg-white">
+        <div className="flex items-center justify-center py-12">
+          <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+          <span className="ml-3 text-gray-600 font-medium">Loading café data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md mx-auto p-8 bg-white">
+      <h1 className="text-2xl font-light text-gray-800 mb-8 text-center">
+        Edit Café
+      </h1>
+
+      {submitSuccess && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center text-green-700">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="font-medium">Café updated successfully! Redirecting...</span>
+          </div>
+        </div>
+      )}
+
+      {errors.general && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="text-red-700 font-medium">{errors.general}</div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Café Name */}
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            Café Name *
+          </label>
+          <input
+            id="name"
+            value={formData.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
+            type="text"
+            placeholder="Enter café name"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
+              errors.name ? "border-red-300" : "border-gray-200"
+            }`}
+            disabled={isSubmitting}
+          />
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+          )}
+        </div>
+
+        {/* Ratings Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-800">Ratings</h3>
+          
+          {/* Coffee Rating */}
+          <div>
+            <label htmlFor="coffee-rating" className="block text-sm font-medium text-gray-700 mb-2">
+              Coffee Rating: {formData.coffeeRating}/10
+            </label>
+            <input
+              id="coffee-rating"
+              type="range"
+              min="1"
+              max="10"
+              value={formData.coffeeRating}
+              onChange={(e) => handleInputChange("coffeeRating", +e.target.value)}
+              className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+              disabled={isSubmitting}
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Poor</span>
+              <span>Excellent</span>
+            </div>
+            {errors.coffeeRating && (
+              <p className="mt-1 text-sm text-red-600">{errors.coffeeRating}</p>
+            )}
+          </div>
+
+          {/* Atmosphere Rating */}
+          <div>
+            <label htmlFor="atmosphere-rating" className="block text-sm font-medium text-gray-700 mb-2">
+              Atmosphere Rating: {formData.atmosphereRating}/10
+            </label>
+            <input
+              id="atmosphere-rating"
+              type="range"
+              min="1"
+              max="10"
+              value={formData.atmosphereRating}
+              onChange={(e) => handleInputChange("atmosphereRating", +e.target.value)}
+              className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+              disabled={isSubmitting}
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Poor</span>
+              <span>Excellent</span>
+            </div>
+            {errors.atmosphereRating && (
+              <p className="mt-1 text-sm text-red-600">{errors.atmosphereRating}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Address Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-800">Address</h3>
+          
+          {/* Street Address */}
+          <div>
+            <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-2">
+              Street Address *
+            </label>
+            <input
+              id="street"
+              value={formData.street}
+              onChange={(e) => handleInputChange("street", e.target.value)}
+              type="text"
+              placeholder="123 Main St"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
+                errors.street ? "border-red-300" : "border-gray-200"
+              }`}
+              disabled={isSubmitting}
+            />
+            {errors.street && (
+              <p className="mt-1 text-sm text-red-600">{errors.street}</p>
+            )}
+          </div>
+
+          {/* City and State Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                City *
+              </label>
+              <input
+                id="city"
+                value={formData.city}
+                onChange={(e) => handleInputChange("city", e.target.value)}
+                type="text"
+                placeholder="New York"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
+                  errors.city ? "border-red-300" : "border-gray-200"
+                }`}
+                disabled={isSubmitting}
+              />
+              {errors.city && (
+                <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                State *
+              </label>
+              <input
+                id="state"
+                value={formData.state}
+                onChange={(e) => handleInputChange("state", e.target.value)}
+                type="text"
+                placeholder="NY"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
+                  errors.state ? "border-red-300" : "border-gray-200"
+                }`}
+                disabled={isSubmitting}
+              />
+              {errors.state && (
+                <p className="mt-1 text-sm text-red-600">{errors.state}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Postal Code and Country Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2">
+                ZIP / Postal Code
+              </label>
+              <input
+                id="postalCode"
+                value={formData.postalCode}
+                onChange={(e) => handleInputChange("postalCode", e.target.value)}
+                type="text"
+                placeholder="10001"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+                Country
+              </label>
+              <select
+                id="country"
+                value={formData.country}
+                onChange={(e) => handleInputChange("country", e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors"
+                disabled={isSubmitting}
+              >
+                <option value="USA">United States</option>
+                <option value="Canada">Canada</option>
+                <option value="UK">United Kingdom</option>
+                <option value="Australia">Australia</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-6">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            disabled={isSubmitting}
+            className="flex-1 py-3 px-4 border border-gray-200 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`flex-1 py-3 px-4 rounded-lg text-white font-medium transition-colors ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            }`}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Updating...
+              </div>
+            ) : (
+              "Update Café"
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }

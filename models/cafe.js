@@ -31,6 +31,11 @@ const cafeSchema = new mongoose.Schema({
       required: true,
       trim: true
     },
+    state: {
+      type: String,
+      required: true,
+      trim: true
+    },
     postalCode: {
       type: String,
       trim: true
