@@ -2,3 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* themes*/
+[data-theme="iced"] {
+  --accent: #b45309; 
+  --accent-contrast: #ffffff;
+  --accent-hover: #92400e;
+  --ring: rgba(245, 158, 11, 0.4);
+  --surface-start: #fff7ed;
+  --surface-end: #ffedd5;
+  --surface-border: #fcd9bd;
+  --text: #2b1d14;
+  --card-bg: rgba(255,255,255,0.9);
+  --card-border: #fcd9bd;
+  --card-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+[data-theme="matcha"] {
+  --accent: #059669;
+  --accent-contrast: #ffffff;
+  --accent-hover: #047857;
+  --ring: rgba(16,185,129,0.4);
+  --surface-start: #ecfdf5;
+  --surface-end: #d1fae5;
+  --surface-border: #a7f3d0;
+  --text: #052e1e;
+  --card-bg: rgba(255,255,255,0.92);
+  --card-border: #a7f3d0;
+  --card-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+[data-theme="espresso"] {
+  --accent: #d97706;
+  --accent-contrast: #0b0b0b;
+  --accent-hover: #b45309;
+  --ring: rgba(217,119,6,0.45);
+  --surface-start: #0f172a;
+  --surface-end: #111827;
+  --surface-border: #374151;
+  --text: #ffffff;
+  --card-bg: rgba(17,24,39,0.9);
+  --card-border: #374151;
+  --card-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+@layer base {
+  html, body { height: 100%; }
+  body.coffee-body {
+    color: var(--text);
+    background:
+      radial-gradient(1200px 800px at 10% -10%, color-mix(in oklab, var(--surface-end) 15%, transparent), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, color-mix(in oklab, var(--surface-end) 12%, transparent), transparent 60%),
+      radial-gradient(600px 400px at -10% 110%, color-mix(in oklab, var(--surface-end) 10%, transparent), transparent 60%),
+      linear-gradient(180deg, var(--surface-start) 0%, var(--surface-end) 100%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, .heading-serif { font-family: var(--font-heading), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+}
+
+@layer components {
+  .nav-surface { 
+    background: linear-gradient(90deg, color-mix(in oklab, var(--surface-start) 95%, transparent), var(--surface-end));
+    border-bottom: 1px solid var(--surface-border);
+    backdrop-filter: saturate(180%) blur(8px);
+  }
+  .coffee-card { 
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: saturate(180%) blur(6px);
+  }
+  .coffee-card-hover { @apply transition-all hover:shadow-md; }
+  .coffee-btn { 
+    color: var(--accent-contrast);
+    background-color: var(--accent);
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .coffee-btn:hover { background-color: var(--accent-hover); }
+  .coffee-btn:focus { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+  .icon-accent { color: var(--accent); }
+  .link-nav { color: var(--accent); padding: 0.5rem 0.75rem; border-radius: 0.5rem; }
+  .link-nav:hover { color: var(--accent-hover); background-color: color-mix(in oklab, var(--surface-end) 40%, transparent); }
+  .input-surface { 
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.5rem;
+  }
+  .input-surface:focus { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+  .seg-btn { 
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    background-color: transparent;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+  .seg-btn:hover { background-color: color-mix(in oklab, var(--surface-end) 35%, transparent); }
+  .seg-btn-active { 
+    color: var(--text);
+    border: 1px solid var(--accent);
+    background-color: color-mix(in oklab, var(--surface-end) 55%, transparent);
+  }
+  .muted { color: var(--text); opacity: 0.75; }
+}

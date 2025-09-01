@@ -23,7 +23,7 @@ export default function EditCafeForm({ initialData }) {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Update state variables once initialData is available
+  //update state variables once initialData is available
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -46,11 +46,11 @@ export default function EditCafeForm({ initialData }) {
   const validateForm = () => {
     const newErrors = {};
 
-    // Required field validation
+    // require field validation
     if (!formData.name.trim()) {
-      newErrors.name = "Café name is required";
+      newErrors.name = "Cafe name is required";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Café name must be at least 2 characters";
+      newErrors.name = "Cafe name must be at least 2 characters";
     }
 
     if (!formData.street.trim()) {
@@ -118,7 +118,7 @@ export default function EditCafeForm({ initialData }) {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to update the café");
+        throw new Error(errorData.error || "Failed to update the cafe");
       }
 
       setSubmitSuccess(true);
@@ -126,8 +126,8 @@ export default function EditCafeForm({ initialData }) {
         router.push("/");
       }, 1500);
     } catch (error) {
-      console.error("Error updating café:", error);
-      setErrors({ general: error.message || "There was an issue updating the café. Please try again." });
+      console.error("Error updating cafe:", error);
+      setErrors({ general: error.message || "There was an issue updating the cafe. Please try again." });
       setIsSubmitting(false);
     }
   };
@@ -137,7 +137,7 @@ export default function EditCafeForm({ initialData }) {
       <div className="max-w-md mx-auto p-8 bg-white">
         <div className="flex items-center justify-center py-12">
           <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
-          <span className="ml-3 text-gray-600 font-medium">Loading café data...</span>
+          <span className="ml-3 text-gray-600 font-medium">Loading cafe data...</span>
         </div>
       </div>
     );
@@ -146,7 +146,7 @@ export default function EditCafeForm({ initialData }) {
   return (
     <div className="max-w-md mx-auto p-8 bg-white">
       <h1 className="text-2xl font-light text-gray-800 mb-8 text-center">
-        Edit Café
+        Edit Cafe
       </h1>
 
       {submitSuccess && (
@@ -155,7 +155,7 @@ export default function EditCafeForm({ initialData }) {
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            <span className="font-medium">Café updated successfully! Redirecting...</span>
+            <span className="font-medium">Cafe updated successfully! Redirecting...</span>
           </div>
         </div>
       )}
@@ -167,17 +167,17 @@ export default function EditCafeForm({ initialData }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Café Name */}
+        {/* Cafe Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Café Name *
+            Cafe Name *
           </label>
           <input
             id="name"
             value={formData.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
             type="text"
-            placeholder="Enter café name"
+            placeholder="Enter cafe name"
             className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
               errors.name ? "border-red-300" : "border-gray-200"
             }`}
@@ -188,11 +188,11 @@ export default function EditCafeForm({ initialData }) {
           )}
         </div>
 
-        {/* Ratings Section */}
+
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-800">Ratings</h3>
           
-          {/* Coffee Rating */}
+          
           <div>
             <label htmlFor="coffee-rating" className="block text-sm font-medium text-gray-700 mb-2">
               Coffee Rating: {formData.coffeeRating}/10
@@ -216,7 +216,6 @@ export default function EditCafeForm({ initialData }) {
             )}
           </div>
 
-          {/* Atmosphere Rating */}
           <div>
             <label htmlFor="atmosphere-rating" className="block text-sm font-medium text-gray-700 mb-2">
               Atmosphere Rating: {formData.atmosphereRating}/10
@@ -241,11 +240,10 @@ export default function EditCafeForm({ initialData }) {
           </div>
         </div>
 
-        {/* Address Section */}
+
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-800">Address</h3>
-          
-          {/* Street Address */}
+
           <div>
             <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-2">
               Street Address *
@@ -256,9 +254,7 @@ export default function EditCafeForm({ initialData }) {
               onChange={(e) => handleInputChange("street", e.target.value)}
               type="text"
               placeholder="123 Main St"
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
-                errors.street ? "border-red-300" : "border-gray-200"
-              }`}
+              className={`w-full px-4 py-3 input-surface transition-colors ${errors.street ? "!border-red-300" : ""}`}
               disabled={isSubmitting}
             />
             {errors.street && (
@@ -266,7 +262,7 @@ export default function EditCafeForm({ initialData }) {
             )}
           </div>
 
-          {/* City and State Row */}
+   
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
@@ -278,9 +274,7 @@ export default function EditCafeForm({ initialData }) {
                 onChange={(e) => handleInputChange("city", e.target.value)}
                 type="text"
                 placeholder="New York"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
-                  errors.city ? "border-red-300" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 input-surface transition-colors ${errors.city ? "!border-red-300" : ""}`}
                 disabled={isSubmitting}
               />
               {errors.city && (
@@ -298,9 +292,7 @@ export default function EditCafeForm({ initialData }) {
                 onChange={(e) => handleInputChange("state", e.target.value)}
                 type="text"
                 placeholder="NY"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
-                  errors.state ? "border-red-300" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 input-surface transition-colors ${errors.state ? "!border-red-300" : ""}`}
                 disabled={isSubmitting}
               />
               {errors.state && (
@@ -309,7 +301,6 @@ export default function EditCafeForm({ initialData }) {
             </div>
           </div>
 
-          {/* Postal Code and Country Row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2">
@@ -321,7 +312,7 @@ export default function EditCafeForm({ initialData }) {
                 onChange={(e) => handleInputChange("postalCode", e.target.value)}
                 type="text"
                 placeholder="10001"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors"
+                className="w-full px-4 py-3 input-surface transition-colors"
                 disabled={isSubmitting}
               />
             </div>
@@ -334,7 +325,7 @@ export default function EditCafeForm({ initialData }) {
                 id="country"
                 value={formData.country}
                 onChange={(e) => handleInputChange("country", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors"
+                className="w-full px-4 py-3 input-surface transition-colors"
                 disabled={isSubmitting}
               >
                 <option value="USA">United States</option>
@@ -347,7 +338,7 @@ export default function EditCafeForm({ initialData }) {
           </div>
         </div>
 
-        {/* Action Buttons */}
+
         <div className="flex gap-3 pt-6">
           <button
             type="button"
@@ -372,7 +363,7 @@ export default function EditCafeForm({ initialData }) {
                 Updating...
               </div>
             ) : (
-              "Update Café"
+              "Update Cafe"
             )}
           </button>
         </div>

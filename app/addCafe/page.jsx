@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSession, signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AddCafe() {
+  const { status } = useSession();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     name: "",
     coffeeRating: 5,
@@ -21,17 +24,61 @@ export default function AddCafe() {
 
   const router = useRouter();
 
+  // cleans strings
   const normalize = (s) =>
     typeof s === "string" ? s.trim().toLowerCase() : "";
+
+  // prefill from query string (Convert to Cafe flow)
+  useEffect(() => {
+    const prefillName = searchParams.get("prefillName");
+    const addressCombined = searchParams.get("address");
+    const prefillStreet = searchParams.get("prefillStreet");
+    const prefillCity = searchParams.get("prefillCity");
+    const prefillState = searchParams.get("prefillState");
+    const prefillPostal = searchParams.get("prefillPostal");
+    const prefillCountry = searchParams.get("prefillCountry");
+
+    const parsed = (() => {
+      if (!addressCombined || prefillStreet || prefillCity || prefillState) return {};
+      // attempts to parse address with regex
+      const parts = addressCombined.split(",").map(p => p.trim()).filter(Boolean);
+      const out = {};
+      if (parts.length > 0) out.street = parts[0];
+      if (parts.length > 1) out.city = parts[1];
+      if (parts.length > 2) {
+        const m = parts[2].match(/([A-Za-z]{2})\s*(\d{4,10})?/);
+        if (m) {
+          out.state = m[1];
+          if (m[2]) out.postalCode = m[2];
+        }
+      }
+      if (parts.length > 3) out.country = parts.slice(3).join(", ");
+      return out;
+    })();
+
+    if (prefillName || prefillStreet || prefillCity || prefillState || prefillPostal || prefillCountry || addressCombined) {
+      setFormData(prev => ({
+        ...prev,
+        name: prefillName ?? prev.name,
+        street: prefillStreet ?? parsed.street ?? prev.street,
+        city: prefillCity ?? parsed.city ?? prev.city,
+        state: prefillState ?? parsed.state ?? prev.state,
+        postalCode: prefillPostal ?? parsed.postalCode ?? prev.postalCode,
+        country: prefillCountry ?? parsed.country ?? prev.country,
+      }));
+    }
+    // run once on mount
+    
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
 
     // Required field validation
     if (!formData.name.trim()) {
-      newErrors.name = "Café name is required";
+      newErrors.name = "Cafe name is required";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Café name must be at least 2 characters";
+      newErrors.name = "Cafe name must be at least 2 characters";
     }
 
     if (!formData.street.trim()) {
@@ -48,7 +95,7 @@ export default function AddCafe() {
       newErrors.state = "Please enter a valid state (e.g., NJ, CA)";
     }
 
-    // Rating validation
+    // rating validation
     if (formData.coffeeRating < 1 || formData.coffeeRating > 10) {
       newErrors.coffeeRating = "Coffee rating must be between 1 and 10";
     }
@@ -63,7 +110,7 @@ export default function AddCafe() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
+    // clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
@@ -95,14 +142,14 @@ export default function AddCafe() {
     setErrors({});
 
     try {
-      // 1) Fetch existing cafes
+      //Fetch existing cafes
       const listRes = await fetch("/api/cafes");
-      if (!listRes.ok) throw new Error("Could not load existing cafés");
+      if (!listRes.ok) throw new Error("Could not load existing cafes");
 
       const data = await listRes.json();
       const cafeList = Array.isArray(data) ? data : data.cafes || [];
 
-      // 2) Duplicate check
+      // Duplicate check
       const duplicate = cafeList.some((c) => {
         const addr = c.address || {};
         return (
@@ -114,7 +161,7 @@ export default function AddCafe() {
       });
 
       if (duplicate) {
-        setErrors({ general: "You've already added that café." });
+        setErrors({ general: "You've already added that cafe." });
         setIsSubmitting(false);
         return;
       }
@@ -137,13 +184,24 @@ export default function AddCafe() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to add the café");
+        throw new Error(errorData.error || "Failed to add the cafe");
       }
 
       setSubmitSuccess(true);
+
+      // If coming from To‑Try Convert, auto-delete the To‑Try item
+      const toTryId = searchParams.get("toTryId");
+      if (toTryId) {
+        try {
+          await fetch(`/api/to-try/${encodeURIComponent(toTryId)}`, { method: 'DELETE' });
+        } catch (e) {
+          // ignore delete errors
+        }
+      }
+
       setTimeout(() => {
         router.push("/");
-      }, 1500);
+      }, 1200);
     } catch (err) {
       console.error(err);
       setErrors({ general: err.message || "Something went wrong. Please try again." });
@@ -151,10 +209,23 @@ export default function AddCafe() {
     }
   };
 
+  if (status === "unauthenticated") {
+    return (
+      <div className="max-w-md mx-auto p-8 coffee-card">
+        <h1 className="text-2xl heading-serif text-gray-800 mb-4">Add Cafe</h1>
+        <p className="text-gray-700 mb-4">Please sign up or sign in to add a cafe.</p>
+        <div className="flex gap-2">
+          <a className="coffee-btn" href="/signup">Sign up</a>
+          <button className="px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50" onClick={() => signIn()}>Sign in</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto p-8 bg-white">
       <h1 className="text-2xl font-light text-gray-800 mb-8 text-center">
-        Add New Café
+        Add New Cafe
       </h1>
 
       {submitSuccess && (
@@ -163,7 +234,7 @@ export default function AddCafe() {
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            <span className="font-medium">Café added successfully! Redirecting...</span>
+            <span className="font-medium">Cafe was  added successfully! Redirecting...</span>
           </div>
         </div>
       )}
@@ -175,17 +246,17 @@ export default function AddCafe() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Café Name */}
+      
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Café Name *
+            Cafe Name *
           </label>
           <input
             id="name"
             value={formData.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
             type="text"
-            placeholder="Enter café name"
+            placeholder="Enter cafe name"
             className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
               errors.name ? "border-red-300" : "border-gray-200"
             }`}
@@ -264,9 +335,7 @@ export default function AddCafe() {
               onChange={(e) => handleInputChange("street", e.target.value)}
               type="text"
               placeholder="123 Main St"
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
-                errors.street ? "border-red-300" : "border-gray-200"
-              }`}
+              className={`w-full px-4 py-3 input-surface transition-colors ${errors.street ? "!border-red-300" : ""}`}
               disabled={isSubmitting}
             />
             {errors.street && (
@@ -274,7 +343,6 @@ export default function AddCafe() {
             )}
           </div>
 
-          {/* City and State Row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
@@ -286,9 +354,7 @@ export default function AddCafe() {
                 onChange={(e) => handleInputChange("city", e.target.value)}
                 type="text"
                 placeholder="New York"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
-                  errors.city ? "border-red-300" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 input-surface transition-colors ${errors.city ? "!border-red-300" : ""}`}
                 disabled={isSubmitting}
               />
               {errors.city && (
@@ -306,9 +372,7 @@ export default function AddCafe() {
                 onChange={(e) => handleInputChange("state", e.target.value)}
                 type="text"
                 placeholder="NY"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors ${
-                  errors.state ? "border-red-300" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 input-surface transition-colors ${errors.state ? "!border-red-300" : ""}`}
                 disabled={isSubmitting}
               />
               {errors.state && (
@@ -320,29 +384,27 @@ export default function AddCafe() {
           {/* Postal Code and Country Row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2">
-                ZIP / Postal Code
-              </label>
+              <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2"> ZIP / Postal Code</label>
               <input
                 id="postalCode"
                 value={formData.postalCode}
                 onChange={(e) => handleInputChange("postalCode", e.target.value)}
                 type="text"
                 placeholder="10001"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors"
+                className="w-full px-4 py-3 input-surface transition-colors"
                 disabled={isSubmitting}
               />
             </div>
 
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                Country
-              </label>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+
+
               <select
                 id="country"
                 value={formData.country}
                 onChange={(e) => handleInputChange("country", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors"
+                className="w-full px-4 py-3 input-surface transition-colors"
                 disabled={isSubmitting}
               >
                 <option value="USA">United States</option>
@@ -351,28 +413,34 @@ export default function AddCafe() {
                 <option value="Australia">Australia</option>
                 <option value="Other">Other</option>
               </select>
+
+
             </div>
+
+
           </div>
+
+
         </div>
 
-        {/* Action Buttons */}
         <div className="flex gap-3 pt-6">
+
+
           <button
             type="button"
             onClick={resetForm}
             disabled={isSubmitting}
-            className="flex-1 py-3 px-4 border border-gray-200 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-3 px-4 border rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{borderColor:'var(--card-border)', color:'var(--text)'}}
           >
             Reset
           </button>
+
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`flex-1 py-3 px-4 rounded-lg text-white font-medium transition-colors ${
-              isSubmitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-            }`}
+            className={`flex-1 py-3 px-4 coffee-btn font-medium transition-colors ${isSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
@@ -380,9 +448,11 @@ export default function AddCafe() {
                 Adding...
               </div>
             ) : (
-              "Add Café"
+              "Add Cafe"
             )}
           </button>
+
+
         </div>
       </form>
     </div>

@@ -1,6 +1,16 @@
 const mongoose = require('mongoose');
 
 const cafeSchema = new mongoose.Schema({
+  ownerId: {
+    type: String,
+    required: true,
+    index: true,
+  },
+  ownerName: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   name: {
     type: String,
     required: true,
